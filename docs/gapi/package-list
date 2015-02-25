@@ -1,0 +1,8 @@
+DefaultPackage
+grails-app.conf
+scripts
+src.groovy.org.codehaus.groovy.grails.jabber
+test.unit
+unzipped
+unzipped.scripts
+unzipped.src.groovy.org.codehaus.groovy.grails.jabber
