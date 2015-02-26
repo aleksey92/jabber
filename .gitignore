@@ -1,0 +1,7 @@
+*.log
+/.settings
+/plugin.xml
+/target
+/web-app
+/grails-jabber-*.zip
+/grails-jabber-*.zip.sha1
