@@ -1,12 +1,13 @@
 package org.codehaus.groovy.grails.jabber
 
-import org.apache.log4j.Logger
 import org.jivesoftware.smack.Chat
 import org.jivesoftware.smack.ConnectionConfiguration
 import org.jivesoftware.smack.PacketListener
 import org.jivesoftware.smack.XMPPConnection
 import org.jivesoftware.smack.filter.PacketTypeFilter
 import org.jivesoftware.smack.packet.Message
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * A simple chat bot service using Jabber.  Based on http://memo.feedlr.com/?p=11 and
@@ -16,7 +17,7 @@ import org.jivesoftware.smack.packet.Message
  */
 class ChatListener {
 
-    private static final Logger log = Logger.getLogger(this)
+    private static final Logger log = LoggerFactory.getLogger(this)
 
     private XMPPConnection connection
     private String host
