@@ -1,97 +1,84 @@
 package org.codehaus.groovy.grails.jabber
 
+import org.apache.log4j.Logger
 import org.jivesoftware.smack.Chat
 import org.jivesoftware.smack.ConnectionConfiguration
 import org.jivesoftware.smack.PacketListener
 import org.jivesoftware.smack.XMPPConnection
-import org.jivesoftware.smack.XMPPException
-import org.jivesoftware.smack.filter.PacketFilter
 import org.jivesoftware.smack.filter.PacketTypeFilter
 import org.jivesoftware.smack.packet.Message
-
-import org.apache.log4j.Logger
 
 /**
  * A simple chat bot service using Jabber.  Based on http://memo.feedlr.com/?p=11 and
  * http://blogs.bytecode.com.au/glen/2008/01/03/gravl--google-talk-notifier.html
  *
  * @author Glen Smith
- *
  */
 class ChatListener {
 
-    private static final Logger log = Logger.getLogger(ChatListener.class)
+    private static final Logger log = Logger.getLogger(this)
 
-    XMPPConnection connection
+    private XMPPConnection connection
+    private String host
+    private int port = 5222
+    private String serviceName = "XMPP"
+    private String userName
+    private String password
+    private String listenerMethod
+    private targetService
 
-    def host
-    def port = 5222
-    def serviceName = "XMPP"
+    ChatListener(config, String methodName = null, service = null) {
+        host = config.host
+        port = config.port
+        serviceName = config.serviceName
+        userName = config.username
+        password = config.password
+        listenerMethod = methodName
+        targetService = service
+    }
 
-    def userName
-    def password
+    void connect() {
 
-    def listenerMethod
-    def targetService
+        if (connection) {
+           return
+        }
 
-    def connect = {
+        connection = new XMPPConnection(new ConnectionConfiguration(host, port, serviceName))
 
-        ConnectionConfiguration cc = new ConnectionConfiguration(host,
-            port, serviceName)
-
-        connection = new XMPPConnection(cc)
-
-        log.debug "Connecting to Jabber server"
+        log.debug 'Connecting to Jabber server'
         connection.connect()
         connection.login(userName, password, userName + Long.toHexString(System.currentTimeMillis()))
-        log.debug "Connected to Jabber server: ${connection.isConnected()}"  
-
+        log.debug 'Connected to Jabber server: {}', connection.connected
     }
 
-    def listen = { 
+    void listen() {
 
-        if (!connection)
-            connect()
-
-        PacketFilter msgFilter = new PacketTypeFilter(Message.class)
+        connect()
 
         def myListener = [processPacket: { packet ->
+            log.debug 'Received message from {}, subject: {}, body: {}', packet.from, packet.subject, packet.body
+            targetService."$listenerMethod"(packet)
+        }] as PacketListener
 
-                log.debug "Received message from ${packet.from}, subject: ${packet.subject}, body: ${packet.body}"
-                // callback(packet)
-
-                targetService[listenerMethod].call(packet)
-
-            }] as PacketListener
-
-        log.debug "Adding Jabber listnener..."
-        connection.addPacketListener(myListener, msgFilter)
-
-
+        log.debug 'Adding Jabber listener...'
+        connection.addPacketListener(myListener, new PacketTypeFilter(Message))
     }
 
-
-
-    def disconnect() {
-
-        if (connection && connection.isConnected())
-        connection.disconnect()
-
+    void disconnect() {
+        if (connection?.connected) {
+            connection.disconnect()
+        }
     }
 
+    void sendJabberMessage(String to, String body) {
 
-
-    def sendJabberMessage(String to, String msg) {
-        if (!connection)
-           connect()
+        connect()
 
         Chat chat = connection.chatManager.createChat(to, null)
-        def msgObj = new Message(to, Message.Type.chat)
-        msgObj.setBody(msg)
+        def message = new Message(to, Message.Type.chat)
+        message.body = body
 
-        log.debug "Sending Jabber message to ${to} with content ${msg}"
-        chat.sendMessage(msgObj)
+        log.debug 'Sending Jabber message to {} with content {}', to, body
+        chat.sendMessage(message)
     }
-
-
 }
