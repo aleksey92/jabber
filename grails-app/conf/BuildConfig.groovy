@@ -11,6 +11,11 @@ grails.project.dependency.resolution = {
         mavenCentral()
     }
 
+    dependencies {
+        compile 'jivesoftware:smack:3.0.4'
+        compile 'jivesoftware:smackx:3.0.4'
+    }
+
     plugins {
         build ':release:3.0.1', ':rest-client-builder:2.0.3', {
             export = false
